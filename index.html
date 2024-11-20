@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Card Grid</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #eee;
+        }
+
+        .header {
+            background: #f4f4f4;
+            text-align: center;
+            max-width: 100vw;
+            overflow: hidden;
+            border: none;
+            
+            border: 1px solid #ddd;
+
+            box-shadow: 0px 0px 5px #00000077;
+        }
+
+        .search-bar {
+            width: 100vw;
+            font-size: 16px;
+            padding: 10px;
+            border: none;
+            max-width: 100vw;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .card {
+            border-radius: 20px;
+            background-color: #fff;
+            text-align: center;
+
+            border: 1px solid #ddd;
+
+            box-shadow: 0px 0px 9px #00000044;
+        }
+
+        .card img {
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            width: 100%;
+            height: auto;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            padding: 10px;
+            color: #333;
+        }
+
+        /* The Modal (background) */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0,0,0,0.8); /* Black with opacity */
+}
+
+/* Modal Content (image) */
+.modal-content {
+    display: block;
+    width: 90%;
+    max-width: 700px;
+}
+
+/* Caption Text */
+#caption {
+    text-align: center;
+    color: #ccc;
+    padding: 10px;
+    font-size: 20px;
+}
+
+/* The Close Button */
+.close {
+    position: absolute;
+    top: 15px;
+    right: 2vw;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+    color: #bbb;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+    </style>
+
+    <!-- Lightbox CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css" rel="stylesheet">
+
+<!-- Lightbox JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.min.js"></script>
+
+</head>
+<body>
+    <div class="header">
+        <input 
+            type="text" 
+            id="searchBar" 
+            class="search-bar" 
+            placeholder="Karten finden..." 
+            oninput="filterCards()">
+    </div>
+
+    <div class="grid" id="cardGrid">
+        <!-- Cards will be populated here by JavaScript -->
+    </div>
+
+    <!-- Modal for Full-Size Image -->
+<div id="imageModal" class="modal">
+    <span class="close">&times;</span>
+    <img class="modal-content" id="fullSizeImage">
+    <div id="caption"></div>
+</div>
+
+
+<script>
+    // Predefined JSON data
+    const imageData = [
+        {"file": "0001.jpg", "title": "Image 0001"},
+        {"file": "0002.jpg", "title": "Image 0002"},
+        {"file": "123 Weinbergschnecke XL.jpg", "title": "Weinbergschnecke (Snail) XL"},
+        {"file": "56 Seeigel XL.jpg", "title": "Seeigel (Sea Urchin) XL"},
+        {"file": "62-77 Baupla╠Иne Der Weichtiere XL.jpg", "title": "Baupläne der Weichtiere (Mollusks Blueprints) XL"},
+        {"file": "96 Rafflesia M.jpg", "title": "Rafflesia (Flower) M"},
+        {"file": "Aronstab S.jpg", "title": "Aronstab (Arum) S"},
+        {"file": "Bakterien 106 S.jpg", "title": "Bakterien (Bacteria) 106 S"},
+        {"file": "Bakterien Nr 3 Nr 26 S.jpg", "title": "Bakterien Nr 3 und Nr 26 S"},
+        {"file": "Bandwurm 67-92.1 L.jpg", "title": "Bandwurm (Tapeworm) 67-92.1 L"},
+        {"file": "Bandwurm 87 M.jpg", "title": "Bandwurm (Tapeworm) 87 M"},
+        {"file": "Bau Der Darmwand Nr 47 M.jpg", "title": "Bau der Darmwand (Intestinal Wall Structure) Nr 47 M"},
+        {"file": "Baupla╠Иne Der T Wu╠Иrmer 64 L.jpg", "title": "Baupläne der Würmer (Worm Blueprints) 64 L"},
+        {"file": "Befruchtung Und Entwicklung S.jpg", "title": "Befruchtung und Entwicklung (Fertilization and Development) S"},
+        {"file": "Befruchtung Versch. Eier 11 L.jpg", "title": "Befruchtung verschiedener Eier (Fertilization of Various Eggs) 11 L"},
+        {"file": "Blutdru╠Иsen 24 L.jpg", "title": "Blutdrüsen (Blood Glands) 24 L"},
+        {"file": "Champions 101 L.jpg", "title": "Champions 101 L"},
+        {"file": "Chordaia (Acrania) 32-225 XL.jpg", "title": "Chordaia (Acrania) 32-225 XL"},
+        {"file": "Das Auge M.jpg", "title": "Das Auge (The Eye) M"},
+        {"file": "Das Rheinland 21 XXL.jpg", "title": "Das Rheinland (The Rhineland) 21 XXL"},
+        {"file": "Das Sonnentierchen 145 S.jpg", "title": "Das Sonnentierchen (Sun Animal) 145 S"},
+        {"file": "Der Balkan 61 XL.jpg", "title": "Der Balkan (The Balkans) 61 XL"},
+        {"file": "Der Blutegel 94 L.jpg", "title": "Der Blutegel (The Leech) 94 L"},
+        {"file": "Der Fingerhut 337 S.jpg", "title": "Der Fingerhut (Foxglove) 337 S"},
+        {"file": "Der Harz 44 L.jpg", "title": "Der Harz (The Harz Mountains) 44 L"},
+        {"file": "Deutschland Landwirtschaft 91 XL.jpg", "title": "Deutschland Landwirtschaft (German Agriculture) 91 XL"},
+        {"file": "Die Hya╠Иne 100 M.jpg", "title": "Die Hyäne (The Hyena) 100 M"},
+        {"file": "Die Kleidermotte 108-61 L.jpg", "title": "Die Kleidermotte (Clothes Moth) 108-61 L"},
+        {"file": "Die Zelle 2 L.jpg", "title": "Die Zelle (The Cell) 2 L"},
+        {"file": "Dominant Rezessiver Erbgang 1a M.jpg", "title": "Dominant-Rezessiver Erbgang (Dominant-Recessive Inheritance) 1a M"},
+        {"file": "Eireifung 43 M.jpg", "title": "Eireifung (Oocyte Maturation) 43 M"},
+        {"file": "Empfindung 19 L.jpg", "title": "Empfindung (Sensation) 19 L"},
+        {"file": "Endoplasmatisches Ritikulum 4 XL.jpg", "title": "Endoplasmatisches Retikulum (Endoplasmic Reticulum) 4 XL"},
+        {"file": "Entwicklung Sa╠Иugetierembryonen 1a L.jpg", "title": "Entwicklung von Säugetierembryonen (Mammalian Embryo Development) 1a L"},
+        {"file": "Entwicklung Verschiedener Sa╠Иuger 14 L.jpg", "title": "Entwicklung Verschiedener Säugetiere (Development of Different Mammals) 14 L"},
+        {"file": "Erbbild Und Erscheinungsbild 4 L.jpg", "title": "Erbbild und Erscheinungsbild (Genotype and Phenotype) 4 L"},
+        {"file": "Esche 239 L.jpg", "title": "Esche (Ash Tree) 239 L"},
+        {"file": "Europa 10.1-4 XXL.jpg", "title": "Europa (Europe) 10.1-4 XXL"},
+        {"file": "Europa 221 XL.jpg", "title": "Europa (Europe) 221 XL"},
+        {"file": "Fadenalgen 108-53 L.jpg", "title": "Fadenalgen (Filamentous Algae) 108-53 L"},
+        {"file": "Feldhase Wildkaninchen 34 M.jpg", "title": "Feldhase (Field Hare) und Wildkaninchen (Wild Rabbit) 34 M"},
+        {"file": "Fortpflanzung Nr 3 M.jpg", "title": "Fortpflanzung (Reproduction) Nr 3 M"},
+        {"file": "Furchung 1 L.jpg", "title": "Furchung (Cleavage) 1 L"},
+        {"file": "Furchung Wirbeltierembryonen 12c L.jpg", "title": "Furchung Wirbeltierembryonen (Cleavage of Vertebrate Embryos) 12c L"},
+        {"file": "Getreidekrankheiten 186 L.jpg", "title": "Getreidekrankheiten (Cereal Diseases) 186 L"},
+        {"file": "Getreiderost 103 L.jpg", "title": "Getreiderost (Cereal Rust) 103 L"},
+        {"file": "Glu╠Иhwu╠Иrmchen 60 M.jpg", "title": "Glu╠Иhwu╠Иrmchen (Glowworms) 60 M"},
+        {"file": "Haselnussstrauch 84 L.jpg", "title": "Haselnussstrauch (Hazel Bush) 84 L"},
+        {"file": "Hauskatze 266 L.jpg", "title": "Hauskatze (House Cat) 266 L"},
+        {"file": "Hausrind 38 L.jpg", "title": "Hausrind (Cattle) 38 L"}
+    ];
+
+    // Function to create cards dynamically based on image data
+    function createCards() {
+        const cardGrid = document.getElementById('cardGrid');
+        cardGrid.innerHTML = '';  // Clear existing cards
+
+        // Iterate over the image data and create a card for each
+        imageData.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'card';
+
+            const img = document.createElement('img');
+            img.src = `/img/${item.file}`;
+            img.alt = item.title;
+
+            const title = document.createElement('div');
+            title.className = 'card-title';
+            title.textContent = item.title;  // Use the title from JSON data
+
+            card.appendChild(img);
+            card.appendChild(title);
+            cardGrid.appendChild(card);
+        });
+    }
+
+    // Function to filter cards based on search input
+    function filterCards() {
+        const query = document.getElementById('searchBar').value.toLowerCase();
+        const cards = document.querySelectorAll('.card');
+
+        cards.forEach(card => {
+            const title = card.querySelector('.card-title').textContent.toLowerCase();
+            card.style.display = title.includes(query) || query === "" ? "block" : "none";
+        });
+    }
+
+    // Initialize cards when the page loads
+    createCards();
+
+    // Get the modal and image elements
+const modal = document.getElementById('imageModal');
+const modalImg = document.getElementById("fullSizeImage");
+const captionText = document.getElementById("caption");
+
+// Get all images inside the card
+const images = document.querySelectorAll('.card img');
+
+// Add click event to each image
+images.forEach(img => {
+    img.onclick = function() {
+        modal.style.display = "block"; // Show the modal
+        modalImg.src = this.src; // Set the image source in the modal
+        captionText.innerHTML = this.alt; // Set the caption
+    };
+});
+
+// Get the close button
+const closeBtn = document.querySelector(".close");
+
+// When the user clicks on the close button, close the modal
+closeBtn.onclick = function() {
+    modal.style.display = "none";
+};
+
+// When the user clicks anywhere outside the image, close the modal
+window.onclick = function(event) {
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+};
+
+</script>
+
+</body>
+</html>
